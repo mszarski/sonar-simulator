@@ -45,28 +45,32 @@ from typing import Tuple, Optional, Callable
 class SonarConfig:
     """Configuration for a forward-looking imaging sonar.
 
-    Defaults are sized for a long-range FLS targeting ~300 m, similar in
-    spirit to a Sound Metrics ARIS Long Range, BlueView P450 long range,
-    or Sonardyne Solstice. Real ~50 m FLS like the DIDSON / Gemini 720 use
-    much higher frequencies (~1.2 MHz) and shorter range bins.
+    Defaults are sized for a long-range FLS at 120 kHz targeting ~500 m,
+    in the spirit of long-range imaging / obstacle-avoidance sonars
+    (e.g. Kongsberg Mesotech 120 kHz family, Tritech SeaKing long-range).
+    Higher-frequency systems trade range for resolution: Tritech Gemini
+    720i (720 kHz, ~120 m), Sound Metrics ARIS (~1.8 MHz, ~30 m).
     """
     # ---- Geometry ----
     range_min_m:     float = 1.0
-    range_max_m:     float = 300.0
-    num_range_bins:  int   = 1024     # → ~29 cm bin spacing
+    range_max_m:     float = 500.0
+    num_range_bins:  int   = 2048     # → ~24 cm bin spacing, matches pulse cell
     fov_h_deg:       float = 120.0    # horizontal sector width (azimuth)
     fov_v_deg:       float = 20.0     # vertical aperture (elevation)
     num_beams:       int   = 256      # azimuth bins displayed
 
     # ---- Acoustic / signal ----
-    freq_kHz:        float = 400.0    # 400 kHz is a sweet spot for ~300 m
-    pulse_length_s:  float = 100e-6   # → 7.5 cm range cell at c=1500
+    freq_kHz:        float = 120.0    # 120 kHz: ~44 dB/km absorption, good to ~500 m
+    pulse_length_s:  float = 300e-6   # → 22.5 cm range cell at c=1500
     sound_speed:     float = 1500.0
 
-    # Per-beam directivity (3dB widths). Real arrays:
-    #  Tritech Gemini 720i: 0.5° H × 20° V
-    #  ARIS 1200:          ~0.3° H × 14° V
-    beamwidth_h_deg: float = 1.0
+    # Per-beam directivity (3dB widths). Real arrays at this frequency band:
+    #  Kongsberg Mesotech 1071 (~120 kHz): ~3° H × 20° V
+    #  Tritech SeaKing 120 kHz long-range: ~3° H
+    # For comparison higher-freq imaging arrays are much narrower:
+    #  Tritech Gemini 720i (720 kHz):  0.5° H × 20° V
+    #  ARIS 1200          (1.2 MHz):  ~0.3° H × 14° V
+    beamwidth_h_deg: float = 3.0
     beamwidth_v_deg: float = 20.0
 
     # ---- Sampling resolution for ray grid ----
@@ -299,50 +303,55 @@ class AnalyticalScene:
         self.objects = [
             # Small debris near field
             SceneObject('sphere',
-                        dict(centre=np.array([35.0,   4.0, -10.5]), radius=1.0),
+                        dict(centre=np.array([55.0,   6.0, -10.5]), radius=1.0),
                         dict(mu_diff=0.85, mu_spec=0.7, n_spec=12)),
             SceneObject('sphere',
-                        dict(centre=np.array([42.0,  -3.0, -10.8]), radius=0.8),
+                        dict(centre=np.array([70.0,  -5.0, -10.8]), radius=0.8),
                         dict(mu_diff=0.85, mu_spec=0.7, n_spec=12)),
 
-            # Wreck-like rectangular structure at 75 m, sitting on seafloor,
-            # raised ~5 m off floor. Strong return.
+            # Wreck-like rectangular structure at ~125 m, sitting on seafloor,
+            # raised off floor. Strong return.
             SceneObject('box',
-                        dict(centre=np.array([78.0,  -2.0, -8.5]),
+                        dict(centre=np.array([125.0, -3.0, -8.5]),
                              half=np.array([5.0, 9.0, 3.5])),
                         dict(mu_diff=0.95, mu_spec=0.9, n_spec=20)),
 
-            # Pipeline crossing the scene at ~115m, 60 m long across azimuth
+            # Pipeline crossing the scene at ~200 m, 80 m long across azimuth
             SceneObject('box',
-                        dict(centre=np.array([115.0, 0.0, -11.4]),
-                             half=np.array([0.6, 30.0, 0.6])),
+                        dict(centre=np.array([200.0, 0.0, -11.4]),
+                             half=np.array([0.8, 40.0, 0.8])),
                         dict(mu_diff=1.0, mu_spec=1.0, n_spec=8)),
 
-            # Boulder field at 150 m
+            # Boulder field at ~270 m
             SceneObject('sphere',
-                        dict(centre=np.array([150.0, -22.0, -10.5]), radius=2.5),
+                        dict(centre=np.array([255.0, -38.0, -10.5]), radius=3.0),
                         dict(mu_diff=0.85, mu_spec=0.6, n_spec=10)),
             SceneObject('sphere',
-                        dict(centre=np.array([158.0,  25.0, -10.0]), radius=3.0),
+                        dict(centre=np.array([270.0,  42.0, -10.0]), radius=3.5),
                         dict(mu_diff=0.85, mu_spec=0.6, n_spec=10)),
             SceneObject('sphere',
-                        dict(centre=np.array([165.0,   8.0, -10.6]), radius=1.6),
+                        dict(centre=np.array([280.0,  12.0, -10.6]), radius=2.0),
                         dict(mu_diff=0.85, mu_spec=0.6, n_spec=10)),
 
-            # Container-like long target at 195 m, broadside-on
+            # Container-like long target at ~330 m, broadside-on
             SceneObject('box',
-                        dict(centre=np.array([195.0,  10.0, -9.5]),
+                        dict(centre=np.array([330.0,  18.0, -9.5]),
                              half=np.array([6.0, 1.2, 2.5])),
                         dict(mu_diff=0.9, mu_spec=0.8, n_spec=18)),
 
-            # Distant cluster at edge of operating range
+            # Distant cluster at ~430 m
             SceneObject('sphere',
-                        dict(centre=np.array([255.0, -35.0, -9.0]), radius=4.5),
+                        dict(centre=np.array([425.0, -55.0, -9.0]), radius=5.0),
                         dict(mu_diff=0.85, mu_spec=0.6, n_spec=8)),
             SceneObject('box',
-                        dict(centre=np.array([265.0,  40.0, -9.5]),
-                             half=np.array([3.5, 6.0, 2.5])),
+                        dict(centre=np.array([440.0,  65.0, -9.5]),
+                             half=np.array([4.0, 7.0, 3.0])),
                         dict(mu_diff=0.9, mu_spec=0.8, n_spec=14)),
+
+            # Far edge of operating range (~480 m)
+            SceneObject('sphere',
+                        dict(centre=np.array([480.0,   0.0, -9.0]), radius=4.0),
+                        dict(mu_diff=0.85, mu_spec=0.6, n_spec=8)),
         ]
 
     def trace(self, origin: np.ndarray, dirs: np.ndarray

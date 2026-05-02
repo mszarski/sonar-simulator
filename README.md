@@ -1,6 +1,6 @@
 # Forward-Looking Imaging Sonar simulator
 
-A physics-driven Python prototype of a forward-looking imaging sonar (FLS) — the kind of sensor that produces a polar fan image like a Tritech Gemini, Sound Metrics ARIS, or BlueView. Aimed at ~300 m range, accuracy over realtime, and with a clear path to plug into your Unreal Engine pipeline.
+A physics-driven Python prototype of a forward-looking imaging sonar (FLS) — the kind of sensor that produces a polar fan image. Defaults are sized for a long-range 120 kHz system (e.g. Kongsberg Mesotech 1071, Tritech SeaKing long-range) reaching ~500 m, but the same pipeline applies at higher frequencies for shorter-range / higher-resolution systems like Tritech Gemini, Sound Metrics ARIS, or BlueView. Aimed at accuracy over realtime, with a clear path to plug into your Unreal Engine pipeline.
 
 ## Files
 
@@ -29,9 +29,9 @@ Here's the gap, in roughly the order it matters for "looking right":
 
 **4. Speckle, not Gaussian noise.** The grainy texture of a sonar image is *coherent speckle* — a multiplicative random process with a Gamma/Rayleigh distribution, not additive Gaussian noise. You see it because each resolution cell is the coherent sum of many scatterers with random phase. If you add Gaussian noise on top of a clean depth image you get a noisy depth image, not a sonar image.
 
-**5. Two-way transmission loss.** Sound at 400 kHz attenuates ~106 dB/km in seawater (Francois–Garrison formula), plus geometric spreading. So 300 m is ~64 dB of two-way absorption *plus* `40 log₁₀(300) ≈ 99 dB` of point-target spreading — operators counter this with TVG (time-varied gain). You need both pieces, otherwise far-range looks wrong.
+**5. Two-way transmission loss.** Sound at 120 kHz attenuates ~44 dB/km in seawater (Francois–Garrison formula), plus geometric spreading. So 500 m is ~44 dB of two-way absorption *plus* `40 log₁₀(500) ≈ 108 dB` of point-target spreading — operators counter this with TVG (time-varied gain). You need both pieces, otherwise far-range looks wrong. (Going to 400 kHz roughly triples the absorption rate, which is why high-frequency systems are short-range.)
 
-**6. Beam pattern.** Each beam isn't a knife-edge — it has a main lobe (Gaussian-ish, ~1° width) and sidelobes (`sinc²`). Bright targets bleed into adjacent beams. Skipping this makes objects look unnaturally crisp.
+**6. Beam pattern.** Each beam isn't a knife-edge — it has a main lobe (Gaussian-ish, ~3° wide at 120 kHz for typical apertures) and sidelobes (`sinc²`). Bright targets bleed into adjacent beams. Skipping this makes objects look unnaturally crisp.
 
 **7. Pulse smearing in range.** Range resolution is `c·τ/2`. A bright target spans more than one range bin because the pulse has finite length.
 

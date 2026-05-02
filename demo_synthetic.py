@@ -20,13 +20,14 @@ sonar_cmap = LinearSegmentedColormap.from_list(
 
 def main():
     cfg = SonarConfig()
-    cfg.freq_kHz = 400.0
-    cfg.range_max_m = 300.0
-    cfg.num_range_bins = 1024
+    cfg.freq_kHz = 120.0
+    cfg.range_max_m = 500.0
+    cfg.num_range_bins = 2048
     cfg.num_beams = 256
     cfg.fov_h_deg = 120.0
     cfg.fov_v_deg = 20.0
-    cfg.beamwidth_h_deg = 1.0
+    cfg.beamwidth_h_deg = 3.0
+    cfg.pulse_length_s = 300e-6
     cfg.speckle_looks = 4
     cfg.az_samples_per_beam = 4
     cfg.el_samples = 192
@@ -135,7 +136,7 @@ def main():
         color='w', fontsize=13, y=0.98)
     plt.tight_layout(rect=[0, 0, 1, 0.96])
 
-    out_path = "/home/claude/fls_demo.png"
+    out_path = "fls_demo.png"
     plt.savefig(out_path, dpi=110, facecolor='#0a0a0a')
     print(f"  wrote {out_path}")
 
@@ -147,7 +148,7 @@ def main():
     ax.set_xticks([]); ax.set_yticks([])
     ax.set_facecolor('k')
     plt.tight_layout()
-    fan_path = "/home/claude/fls_fan.png"
+    fan_path = "fls_fan.png"
     plt.savefig(fan_path, dpi=120, facecolor='#0a0a0a')
     print(f"  wrote {fan_path}")
 
