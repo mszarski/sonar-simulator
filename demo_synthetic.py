@@ -21,8 +21,8 @@ sonar_cmap = LinearSegmentedColormap.from_list(
 def main():
     cfg = SonarConfig()
     cfg.freq_kHz = 120.0
-    cfg.range_max_m = 500.0
-    cfg.num_range_bins = 2048
+    cfg.range_max_m = 300.0
+    cfg.num_range_bins = 1024
     cfg.num_beams = 256
     cfg.fov_h_deg = 120.0
     cfg.fov_v_deg = 20.0
