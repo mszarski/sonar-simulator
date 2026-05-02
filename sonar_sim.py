@@ -648,10 +648,24 @@ def trace_from_ue_buffers(depth_image: np.ndarray,
         else:
             n = np.zeros(dirs.shape); n[..., 2] = 1.0
 
-        # Default material; you can route material_id → table here
-        mu_d = np.full(rng.shape, 0.45)
-        mu_s = np.full(rng.shape, 0.30)
-        n_s  = np.full(rng.shape, 16.0)
+        if material_id is not None and material_table is not None:
+            # Nearest-neighbour sample of the material ID image
+            u_nn = np.clip(np.round(u).astype(int), 0, W - 1)
+            v_nn = np.clip(np.round(v).astype(int), 0, H - 1)
+            ids = material_id[v_nn, u_nn]
+
+            mu_d = np.full(ids.shape, 0.45)
+            mu_s = np.full(ids.shape, 0.30)
+            n_s  = np.full(ids.shape, 16.0)
+            for mat_id, props in material_table.items():
+                mask = ids == mat_id
+                mu_d = np.where(mask, props['mu_diff'], mu_d)
+                mu_s = np.where(mask, props['mu_spec'], mu_s)
+                n_s  = np.where(mask, props['n_spec'],  n_s)
+        else:
+            mu_d = np.full(rng.shape, 0.45)
+            mu_s = np.full(rng.shape, 0.30)
+            n_s  = np.full(rng.shape, 16.0)
         return rng, n, mu_d, mu_s, n_s
 
     return trace
